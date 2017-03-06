@@ -8,7 +8,7 @@
 
     <cn.ijero.library.JeroEditText
         app:jet_tipTextSize="15sp"
-        app:jet_maxLength="100"
+        app:jet_maxLength="30"
         app:jet_maxTextColor="#FFFF0000"
         app:jet_fillTextColor="#FF0000FF"
         android:padding="20dp"
