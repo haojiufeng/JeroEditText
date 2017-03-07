@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="JeroEditText">
-        <!--最大字数限制-->
+        <!--字数限制-->
         <attr name="jet_maxLength" format="integer" />
-        <!--最大字数的文字颜色-->
-        <attr name="jet_maxTextColor" format="color" />
+
         <!--达到最大字数时提示的颜色-->
-        <attr name="jet_fillTextColor" format="color" />
+        <attr name="jet_maxTextColor" format="color" />
+
+        <!--文字颜色-->
+        <attr name="jet_defTextColor" format="color" />
+
         <!--提示文本的文字大小-->
-        <attr name="jet_tipTextSize" format="dimension" />
+        <attr name="jet_defTextSize" format="dimension" />
+
+        <!--是否显示提示文字-->
+        <attr name="jet_showMaxTip" format="boolean" />
+
     </declare-styleable>
 </resources>

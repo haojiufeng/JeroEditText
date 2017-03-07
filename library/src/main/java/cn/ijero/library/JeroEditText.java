@@ -8,7 +8,6 @@ import android.graphics.Rect;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextPaint;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -20,14 +19,17 @@ import android.util.TypedValue;
 
 public class JeroEditText extends android.support.v7.widget.AppCompatEditText implements TextWatcher {
 
-    private int maxTextColor = Color.parseColor("#FFCCCCCC");
-    private int fillTextColor = Color.parseColor("#FFE02E54");
+    private int defTextColor = Color.parseColor("#FFCCCCCC");
+    private int maxTextColor = Color.parseColor("#FFE02E54");
     private int maxLength = 20;
-    private float maxTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13, getResources().getDisplayMetrics());
+    private float defTextSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 13, getResources().getDisplayMetrics());
+    private TextPaint defPaint = new TextPaint();
     private TextPaint maxPaint = new TextPaint();
-    private TextPaint fillPaint = new TextPaint();
-    private int fillTextWidth;
-    private String tempText = "";
+    private int maxTextWidth;
+    private float margin = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8, getResources().getDisplayMetrics());
+    private int length;
+    private int maxMarginRight = 3;
+    private boolean isShowTip = true;
 
     public JeroEditText(Context context) {
         this(context, null);
@@ -40,23 +42,30 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
     public JeroEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         applyStyle(attrs);
-        init();
+
+        if (isShowTip)
+            init();
     }
 
     private void applyStyle(AttributeSet attrs) {
         TypedArray ta = getContext().obtainStyledAttributes(attrs, R.styleable.JeroEditText);
+        defTextColor = ta.getColor(R.styleable.JeroEditText_jet_defTextColor, defTextColor);
         maxTextColor = ta.getColor(R.styleable.JeroEditText_jet_maxTextColor, maxTextColor);
-        fillTextColor = ta.getColor(R.styleable.JeroEditText_jet_fillTextColor, fillTextColor);
         maxLength = ta.getInteger(R.styleable.JeroEditText_jet_maxLength, maxLength);
-        maxTextSize = ta.getDimensionPixelSize(R.styleable.JeroEditText_jet_tipTextSize, (int) maxTextSize);
+        defTextSize = ta.getDimensionPixelSize(R.styleable.JeroEditText_jet_defTextSize, (int) defTextSize);
+        isShowTip = ta.getBoolean(R.styleable.JeroEditText_jet_showMaxTip, isShowTip);
         ta.recycle();
     }
 
     private void init() {
+        initSettings();
         initDefStyle();
         initPaints();
     }
 
+    private void initSettings() {
+        setFocusableInTouchMode(true);
+    }
 
     private void initDefStyle() {
         this.setMaxLength(maxLength);
@@ -65,44 +74,48 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
 
     private void initPaints() {
         // 抗锯齿
+        defPaint.setAntiAlias(true);
         maxPaint.setAntiAlias(true);
-        fillPaint.setAntiAlias(true);
 
         // 设置tipPaint参数
-        maxPaint.setTextSize(maxTextSize);
-        maxPaint.setColor(maxTextColor);
+        defPaint.setTextSize(defTextSize);
+        defPaint.setColor(defTextColor);
 
         // 设置fillPaint参数
-        fillPaint.setTextSize(maxTextSize);
-        fillPaint.setColor(fillTextColor);
+        maxPaint.setTextSize(defTextSize);
+        maxPaint.setColor(maxTextColor);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        drawTip(canvas);
+        if (isShowTip)
+            drawTip(canvas);
     }
 
     private void drawTip(Canvas canvas) {
-        String maxStr = " / " + String.valueOf(maxLength);
+        String maxStr = "/" + String.valueOf(maxLength);
 
         // 绘制最大的限制字符串
-        int x = getWidth() - getTextMeasureWH(maxStr)[0] - getPaddingRight();
-        int y = getHeight() - getTextMeasureWH(maxStr)[1] - getPaddingBottom();
+        int x = (int) (getWidth() - getTextMeasureWH(maxStr)[0] - margin);
+        int y = (int) (getHeight() - margin);
 
-        String tempLength = String.valueOf(tempText.length());
-        fillTextWidth = getTextMeasureWH(tempLength)[0];
+        String tempLength = String.valueOf(length);
+        maxTextWidth = getTextMeasureWH(tempLength)[0];
 
-        canvas.drawText(maxStr, x, y, maxPaint);
-        canvas.drawText(tempLength, x - fillTextWidth, y, fillPaint);
+        canvas.drawText(maxStr, x, y, defPaint);
+        if (length == maxLength)
+            canvas.drawText(tempLength, x - maxTextWidth - maxMarginRight, y, maxPaint);
+        else
+            canvas.drawText(tempLength, x - maxTextWidth - maxMarginRight, y, defPaint);
     }
 
 
     private int[] getTextMeasureWH(String str) {
         int[] wh = new int[2];
         Rect rect = new Rect();
-        maxPaint.getTextBounds(str, 0, str.length(), rect);//用一个矩形去"套"字符串,获得能完全套住字符串的最小矩形
+        defPaint.getTextBounds(str, 0, str.length(), rect);//用一个矩形去"套"字符串,获得能完全套住字符串的最小矩形
         wh[0] = rect.width();
         wh[1] = rect.height();
         return wh;
@@ -113,17 +126,17 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
      *
      * @return
      */
-    public int getMaxTextColor() {
-        return maxTextColor;
+    public int getDefTextColor() {
+        return defTextColor;
     }
 
     /**
      * 设置提示文本的颜色
      *
-     * @param maxTextColor
+     * @param defTextColor
      */
-    public void setMaxTextColor(int maxTextColor) {
-        this.maxTextColor = maxTextColor;
+    public void setDefTextColor(int defTextColor) {
+        this.defTextColor = defTextColor;
     }
 
     /**
@@ -131,17 +144,17 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
      *
      * @return
      */
-    public int getFillTextColor() {
-        return fillTextColor;
+    public int getMaxTextColor() {
+        return maxTextColor;
     }
 
     /**
      * 设置达到最大字数限制时的文本颜色
      *
-     * @param fillTextColor
+     * @param maxTextColor
      */
-    public void setFillTextColor(int fillTextColor) {
-        this.fillTextColor = fillTextColor;
+    public void setMaxTextColor(int maxTextColor) {
+        this.maxTextColor = maxTextColor;
     }
 
     /**
@@ -169,17 +182,17 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
      *
      * @return
      */
-    public float getMaxTextSize() {
-        return maxTextSize;
+    public float getDefTextSize() {
+        return defTextSize;
     }
 
     /**
      * 设置最大字数时的文本大小
      *
-     * @param maxTextSize
+     * @param defTextSize
      */
-    public void setMaxTextSize(float maxTextSize) {
-        this.maxTextSize = maxTextSize;
+    public void setDefTextSize(float defTextSize) {
+        this.defTextSize = defTextSize;
     }
 
     /**
@@ -187,8 +200,8 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
      *
      * @return
      */
-    public TextPaint getMaxPaint() {
-        return maxPaint;
+    public TextPaint getDefPaint() {
+        return defPaint;
     }
 
     /**
@@ -196,8 +209,8 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
      *
      * @return
      */
-    public TextPaint getFillPaint() {
-        return fillPaint;
+    public TextPaint getMaxPaint() {
+        return maxPaint;
     }
 
     @Override
@@ -207,13 +220,11 @@ public class JeroEditText extends android.support.v7.widget.AppCompatEditText im
 
     @Override
     public final void onTextChanged(CharSequence s, int start, int before, int count) {
-
     }
 
     @Override
     public final void afterTextChanged(Editable s) {
-        String trim = s.toString().trim();
-        tempText = TextUtils.isEmpty(trim) ? "" : trim;
+        length = s.length();
         invalidate();
     }
 }

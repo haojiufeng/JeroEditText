@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">JeroEditText</string>
+    <string name="hint_jet_shape">请输入字符(不超过30个字符)</string>
+    <string name="str_shape_title">加Shape样式：</string>
+    <string name="str_normal_title">普通样式：</string>
+    <string name="hint_jet_narmal">请输入字符(不超过10个字符)</string>
 </resources>
